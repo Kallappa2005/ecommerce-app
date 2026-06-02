@@ -21,10 +21,10 @@ const Contact = () => {
             54709 Willms Station <br /> Suite 350, Washington , USA{" "}
           </p>
           <p className="text-gray-500">
-            Tel:(415) 555-0132 <br /> Email:admin@forever.com
+            Tel:(415) 555-0132 <br /> Email:admin@shopsphere.com
           </p>
           <p className="font-semibold text-xl text-gray-600">
-            Careers at Forever
+            Careers at ShopSphere
           </p>
           <p className="text-gray-500">
             Learn more about teams and job opening.

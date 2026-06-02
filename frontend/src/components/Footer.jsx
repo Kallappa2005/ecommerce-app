@@ -1,4 +1,5 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 import { assets } from "../assets/assets"
 
 const Footer = () => {
@@ -19,10 +20,10 @@ const Footer = () => {
         <div>
           <p className="text-xl font-medium mb-5">COMPANY</p>
           <ul className="flex flex-col gap-1 text-gray-600">
-            <li>Home </li>
-            <li>About Us</li>
-            <li>Delivery</li>
-            <li>Privacy Policy</li>
+            <li><Link to="/">Home</Link></li>
+            <li><Link to="/about">About Us</Link></li>
+            <li><Link to="/delivery">Delivery</Link></li>
+            <li><Link to="/privacy-policy">Privacy Policy</Link></li>
           </ul>
         </div>
 
@@ -30,7 +31,7 @@ const Footer = () => {
           <p className="text-xl font-medium mb-5">GET IN TOUCH</p>
           <ul className="flex flex-col gap-1 text-gray-600">
             <li>+123-456-7890</li>
-            <li>contact@foreveryou.com</li>
+            <li>contact@shopsphere.com</li>
           </ul>
         </div>
 
@@ -38,7 +39,7 @@ const Footer = () => {
 
       <div>
         <hr/>
-        <p className='py-5 text-sm text-center'>Copyright 2025@ Forever.com -All Rights Reserved.</p>
+        <p className='py-5 text-sm text-center'>Copyright 2025@ ShopSphere.com -All Rights Reserved.</p>
       </div>
 
     </div>
