@@ -2,7 +2,7 @@
 
 A full-stack e-commerce platform built with the MERN stack, featuring separate user and admin dashboards, multiple payment methods, and a modern, responsive interface.
 
-Try Live Demo at : shopsphere-six-phi.vercel.app/
+Try Live Demo at: [ShopSphere Live Demo](https://shopsphere-six-phi.vercel.app/)
 
 ## ✨ Features
 
