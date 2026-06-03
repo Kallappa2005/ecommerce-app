@@ -214,15 +214,42 @@ Each directory (`frontend`, `admin`, and `backend`) contains a `vercel.json` con
 Email: admin@forever.com
 Password: admin@123
 ```
-*⚠️ Change these in production!*
 
-## 📸 Screenshots
 
-*(Add your application screenshots here)*
+
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+We welcome contributions from the community. If you want to help improve ShopSphere, follow this simple workflow:
+
+1. **Find an issue**
+   - Browse the issues list and pick something you can work on.
+   - If possible, comment on the issue before starting so others know it is being handled.
+
+2. **Fork the repository**
+   - Create your own copy of the project on GitHub.
+   - Clone your fork to your local machine.
+
+3. **Create a branch**
+   - Make a new branch for your fix or feature.
+   - Use a clear branch name related to the task.
+
+4. **Make your changes**
+   - Follow the existing code style and keep changes focused.
+   - Test your changes locally before submitting.
+
+5. **Commit your work**
+   - Write a clear commit message that explains what you changed.
+   - Keep commits small and meaningful when possible.
+
+6. **Push and open a Pull Request**
+   - Push your branch to your fork.
+   - Open a PR against the main branch of the original repository.
+   - Include a short description of the change and any relevant screenshots or notes.
+
+7. **Review feedback**
+   - Respond to review comments if any changes are requested.
+   - Update your branch and push again until the PR is ready to merge.
 
 ## 📝 License
 
@@ -230,7 +257,7 @@ This project is licensed under the MIT License.
 
 ## 👨‍💻 Author
 
-Your Name
+Kallappa Murasiddh Kabboor
 
 ## 🙏 Acknowledgments
 
@@ -241,6 +268,6 @@ Your Name
 
 ---
 
-**Built with ❤️ using MERN Stack**
+
 
 
