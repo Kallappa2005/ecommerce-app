@@ -1,0 +1,265 @@
+# =============================================================================
+# Docker Compose — Production (AWS EC2)
+# =============================================================================
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Differences from development compose:
+#   - No MongoDB container (uses Atlas)
+#   - Nginx sits in front on port 80
+#   - NODE_ENV=production on all services
+#   - Resource limits on each container
+#   - No frontend/admin dev servers — Nginx serves built static files
+# =============================================================================
+
+networks:
+  ecommerce-network:
+    driver: bridge
+
+volumes:
+  rabbitmq_data:
+
+x-rabbitmq-env: &rabbitmq-env
+  RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
+
+x-prod-defaults: &prod-defaults
+  restart: always
+  networks:
+    - ecommerce-network
+
+services:
+
+  # ── RabbitMQ ────────────────────────────────────────────────────────────────
+  rabbitmq:
+    <<: *prod-defaults
+    image: rabbitmq:3-management-alpine
+    container_name: ecommerce-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── Nginx ───────────────────────────────────────────────────────────────────
+  nginx:
+    <<: *prod-defaults
+    build:
+      context: ./docker/nginx
+      dockerfile: Dockerfile
+    container_name: ecommerce-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./ssl:/etc/ssl:ro  # Mount SSL certs (managed by Certbot or ACM)
+    depends_on:
+      - gateway
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  # ── API Gateway ─────────────────────────────────────────────────────────────
+  gateway:
+    <<: *prod-defaults
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: ecommerce-gateway
+    environment:
+      <<: *rabbitmq-env
+      PORT: 3000
+      NODE_ENV: production
+      JWT_SECRET: ${JWT_SECRET}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      USER_SERVICE_URL: http://user-service:4001
+      PRODUCT_SERVICE_URL: http://product-service:4002
+      CART_SERVICE_URL: http://cart-service:4003
+      ORDER_SERVICE_URL: http://order-service:4004
+      PAYMENT_SERVICE_URL: http://payment-service:4005
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  # ── User Service ─────────────────────────────────────────────────────────────
+  user-service:
+    <<: *prod-defaults
+    build:
+      context: .
+      dockerfile: services/user-service/Dockerfile
+    container_name: ecommerce-user-service
+    environment:
+      <<: *rabbitmq-env
+      PORT: 4001
+      NODE_ENV: production
+      MONGODB_URI: ${MONGODB_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  # ── Product Service ──────────────────────────────────────────────────────────
+  product-service:
+    <<: *prod-defaults
+    build:
+      context: .
+      dockerfile: services/product-service/Dockerfile
+    container_name: ecommerce-product-service
+    environment:
+      <<: *rabbitmq-env
+      PORT: 4002
+      NODE_ENV: production
+      MONGODB_URI: ${MONGODB_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_S3_BUCKET: ${AWS_S3_BUCKET}
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  # ── Cart Service ─────────────────────────────────────────────────────────────
+  cart-service:
+    <<: *prod-defaults
+    build:
+      context: .
+      dockerfile: services/cart-service/Dockerfile
+    container_name: ecommerce-cart-service
+    environment:
+      <<: *rabbitmq-env
+      PORT: 4003
+      NODE_ENV: production
+      MONGODB_URI: ${MONGODB_URI}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+  # ── Order Service ─────────────────────────────────────────────────────────────
+  order-service:
+    <<: *prod-defaults
+    build:
+      context: .
+      dockerfile: services/order-service/Dockerfile
+    container_name: ecommerce-order-service
+    environment:
+      <<: *rabbitmq-env
+      PORT: 4004
+      NODE_ENV: production
+      MONGODB_URI: ${MONGODB_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  # ── Payment Service ───────────────────────────────────────────────────────────
+  payment-service:
+    <<: *prod-defaults
+    build:
+      context: .
+      dockerfile: services/payment-service/Dockerfile
+    container_name: ecommerce-payment-service
+    environment:
+      <<: *rabbitmq-env
+      PORT: 4005
+      NODE_ENV: production
+      MONGODB_URI: ${MONGODB_URI}
+      JWT_SECRET: ${JWT_SECRET}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
+      RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  # ── Email Service ─────────────────────────────────────────────────────────────
+  email-service:
+    <<: *prod-defaults
+    build:
+      context: .
+      dockerfile: services/email-service/Dockerfile
+    container_name: ecommerce-email-service
+    environment:
+      <<: *rabbitmq-env
+      NODE_ENV: production
+      AWS_REGION: ${AWS_REGION}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_SES_FROM_EMAIL: ${AWS_SES_FROM_EMAIL}
+      APP_NAME: ${APP_NAME:-ShopSphere}
+      FRONTEND_URL: ${FRONTEND_URL}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
+  # ── Notification Service ──────────────────────────────────────────────────────
+  notification-service:
+    <<: *prod-defaults
+    build:
+      context: .
+      dockerfile: services/notification-service/Dockerfile
+    container_name: ecommerce-notification-service
+    environment:
+      <<: *rabbitmq-env
+      PORT: 4007
+      NODE_ENV: production
+      FRONTEND_URL: ${FRONTEND_URL}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M

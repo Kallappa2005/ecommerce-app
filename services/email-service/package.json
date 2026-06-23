@@ -1,0 +1,15 @@
+{
+  "name": "email-service",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "description": "Email microservice consuming RabbitMQ events and sending via AWS SES",
+  "dependencies": {
+    "@aws-sdk/client-ses": "^3.787.0",
+    "amqplib": "^0.10.7",
+    "dotenv": "^16.4.7"
+  }
+}
